@@ -2,6 +2,7 @@ package com.passwordmanager.ui;
 
 import com.passwordmanager.database.Password;
 import com.passwordmanager.storage.PasswordStore;
+import com.passwordmanager.utils.PasswordGenerator;
 
 import java.util.Scanner;
 
@@ -16,7 +17,7 @@ public class CLI {
 
     public void start() {
         System.out.println("Willkommen zum Password Manager!");
-        System.out.println("Befehle: add, delete, list, show, exit");
+        System.out.println("Befehle: add, delete, list, show, generate, exit");
 
         boolean running = true;
         while (running) {
@@ -36,6 +37,9 @@ public class CLI {
                 case "show":
                     handleShowPassword();
                     break;
+                case "generate":
+                    handleGeneratePassword();
+                    break;
                 case "exit":
                     running = false;
                     System.out.println("Programm beendet.");
@@ -47,16 +51,59 @@ public class CLI {
     }
 
     private void handleAddPassword() {
+        Scanner scanner = new Scanner(System.in);
+
         System.out.print("Seite: ");
         String site = scanner.nextLine();
+
         System.out.print("Benutzername: ");
         String username = scanner.nextLine();
-        System.out.print("Passwort: ");
-        String password = scanner.nextLine();
 
-        passwordStore.addPassword(new Password(site, username, password));
-        System.out.println("Passwort hinzugefügt.");
+        String password = "";
+
+        System.out.print("Eigenes Passwort eingeben oder generieren lassen? (e/g): ");
+        String choice = scanner.nextLine().trim().toLowerCase();
+
+        if (choice.equals("g")) {
+            System.out.print("Passwortlänge eingeben: ");
+            int length = scanner.nextInt();
+            scanner.nextLine();  // Zeilenumbruch entfernen
+
+            System.out.print("Großbuchstaben verwenden? (y/n): ");
+            boolean useUpper = scanner.nextLine().trim().equalsIgnoreCase("y");
+
+            System.out.print("Kleinbuchstaben verwenden? (y/n): ");
+            boolean useLower = scanner.nextLine().trim().equalsIgnoreCase("y");
+
+            System.out.print("Zahlen verwenden? (y/n): ");
+            boolean useDigits = scanner.nextLine().trim().equalsIgnoreCase("y");
+
+            System.out.print("Sonderzeichen verwenden? (y/n): ");
+            boolean useSpecial = scanner.nextLine().trim().equalsIgnoreCase("y");
+
+            try {
+                password = PasswordGenerator.generate(length, useUpper, useLower, useDigits, useSpecial);
+                System.out.println("Generiertes Passwort: " + password);
+                System.out.print("Willst du dieses Passwort verwenden? (y/n): ");
+                String confirm = scanner.nextLine().trim().toLowerCase();
+                if (!confirm.equals("y")) {
+                    System.out.print("Gib dein eigenes Passwort ein: ");
+                    password = scanner.nextLine();
+                }
+            } catch (IllegalArgumentException e) {
+                System.out.println("Fehler: " + e.getMessage());
+                return;  // Abbruch, falls ungültige Eingaben
+            }
+        } else {
+            System.out.print("Passwort: ");
+            password = scanner.nextLine();
+        }
+
+        Password newPassword = new Password(site, username, password);
+        passwordStore.addPassword(newPassword);
+        System.out.println("Passwort gespeichert!");
     }
+
 
     private void handleDeletePassword() {
         System.out.print("Seite zum Löschen: ");
@@ -86,5 +133,33 @@ public class CLI {
             System.out.println("Kein Passwort für diese Seite gefunden.");
         }
     }
+
+    private void handleGeneratePassword() {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Passwortlänge eingeben: ");
+        int length = scanner.nextInt();
+        scanner.nextLine();  // Zeilenumbruch entfernen
+
+        System.out.print("Großbuchstaben verwenden? (y/n): ");
+        boolean useUpper = scanner.nextLine().trim().equalsIgnoreCase("y");
+
+        System.out.print("Kleinbuchstaben verwenden? (y/n): ");
+        boolean useLower = scanner.nextLine().trim().equalsIgnoreCase("y");
+
+        System.out.print("Zahlen verwenden? (y/n): ");
+        boolean useDigits = scanner.nextLine().trim().equalsIgnoreCase("y");
+
+        System.out.print("Sonderzeichen verwenden? (y/n): ");
+        boolean useSpecial = scanner.nextLine().trim().equalsIgnoreCase("y");
+
+        try {
+            String generatedPassword = PasswordGenerator.generate(length, useUpper, useLower, useDigits, useSpecial);
+            System.out.println("Generiertes Passwort: " + generatedPassword);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Fehler: " + e.getMessage());
+        }
+    }
+
 
 }

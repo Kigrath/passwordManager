@@ -6,7 +6,7 @@ public class Password {
     private String site;
     private String username;
     private String encryptedPassword;
-    private static final String KEY = "MeinGeheimerKey!!"; // Schlüssel (MUSS 16 Zeichen lang sein!)
+    private static final String KEY = "MeinGeheimerKey!"; // 16 Zeichen
 
     public Password(String site, String username, String password) {
         this.site = site;
@@ -39,7 +39,7 @@ public class Password {
         return "Password{" +
                 "site='" + site + '\'' +
                 ", username='" + username + '\'' +
-                ", password='***** (verschlüsselt)' " + // Passwort nicht direkt anzeigen
+                ", password='***** (verschlüsselt)'" +
                 '}';
     }
 }
