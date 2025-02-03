@@ -1,18 +1,18 @@
 package com.passwordmanager.database;
 
+import com.passwordmanager.auth.UserAuth;
 import com.passwordmanager.encryption.EncryptionUtils;
 
 public class Password {
     private String site;
     private String username;
     private String encryptedPassword;
-    private static final String KEY = "MeinGeheimerKey!"; // 16 Zeichen
 
     public Password(String site, String username, String password) {
         this.site = site;
         this.username = username;
         try {
-            this.encryptedPassword = EncryptionUtils.encrypt(password, KEY);
+            this.encryptedPassword = EncryptionUtils.encrypt(password, UserAuth.getEncryptionKey());
         } catch (Exception e) {
             throw new RuntimeException("Fehler bei der Verschlüsselung!", e);
         }
@@ -28,7 +28,7 @@ public class Password {
 
     public String getPassword() {
         try {
-            return EncryptionUtils.decrypt(encryptedPassword, KEY);
+            return EncryptionUtils.decrypt(encryptedPassword, UserAuth.getEncryptionKey());
         } catch (Exception e) {
             throw new RuntimeException("Fehler bei der Entschlüsselung!", e);
         }
