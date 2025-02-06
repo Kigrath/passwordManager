@@ -1,6 +1,6 @@
 <h1 align="center" id="title">Password Manager</h1>
 
-<p id="description">I simple local running portable password manager</p>
+<p id="description">A simple local running portable password manager</p>
 
   
   
