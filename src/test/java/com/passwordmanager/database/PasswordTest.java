@@ -38,7 +38,7 @@ class PasswordTest {
     // Test für die toString-Methode (wobei das Passwort nicht ausgegeben wird)
     @Test
     void testToString() {
-        String expectedOutput = "Password{site='example.com', username='user1'}";
+        String expectedOutput = "Password{site='example.com', username='user1', password='***** (verschluesselt)'}";
         assertEquals(expectedOutput, password.toString());
     }
 }
