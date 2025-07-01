@@ -1,6 +1,8 @@
 package com.passwordmanager.storage;
 
 import com.passwordmanager.database.Password;
+import com.passwordmanager.auth.UserAuth;
+import com.passwordmanager.encryption.EncryptionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,7 +22,7 @@ class PasswordStoreTest {
 
     // Setup-Methode, die vor jedem Test ausgeführt wird
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         try {
             Path tempFile = Files.createTempFile("passwords", ".json");
             tempFilePath = tempFile.toString();
@@ -28,6 +30,11 @@ class PasswordStoreTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        String key = java.util.Base64.getEncoder()
+                .encodeToString(EncryptionUtils.hashSHA256("secret"));
+        java.lang.reflect.Field keyField = UserAuth.class.getDeclaredField("encryptionKey");
+        keyField.setAccessible(true);
+        keyField.set(null, key);
         password1 = new Password("example.com", "user1", "securepassword123");
         password2 = new Password("testsite.com", "user2", "password456");
     }
@@ -92,6 +99,9 @@ class PasswordStoreTest {
         // Löschen der temporären Datei
         try {
             Files.deleteIfExists(Paths.get(tempFilePath));
+            java.lang.reflect.Field keyField = UserAuth.class.getDeclaredField("encryptionKey");
+            keyField.setAccessible(true);
+            keyField.set(null, null);
         } catch (Exception e) {
             e.printStackTrace();
         }
