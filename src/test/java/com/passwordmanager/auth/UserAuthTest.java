@@ -7,14 +7,17 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserAuthTest {
+    private Path tempFile;
 
     @BeforeEach
     void setUp() throws Exception {
-        Files.deleteIfExists(Path.of("master_user.json"));
+        tempFile = Files.createTempFile("userauth", ".json");
+        UserAuth.setFilePath(tempFile.toString());
         Field keyField = UserAuth.class.getDeclaredField("encryptionKey");
         keyField.setAccessible(true);
         keyField.set(null, null);
@@ -22,7 +25,8 @@ class UserAuthTest {
 
     @AfterEach
     void tearDown() throws Exception {
-        Files.deleteIfExists(Path.of("master_user.json"));
+        Files.deleteIfExists(tempFile);
+        UserAuth.setFilePath("master_user.json");
     }
 
     @Test
