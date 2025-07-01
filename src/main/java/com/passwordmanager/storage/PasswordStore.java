@@ -23,6 +23,9 @@ public class PasswordStore {
     }
 
     public void addPassword(Password password) {
+        if (getPasswordForSite(password.getSite()) != null) {
+            return; // bereits vorhanden
+        }
         passwords.add(password);
         saveToFile();
     }
@@ -34,6 +37,39 @@ public class PasswordStore {
 
     public List<Password> getAllPasswords() {
         return passwords;
+    }
+
+    public Password getPasswordForSite(String site) {
+        return passwords.stream()
+                .filter(p -> p.getSite().equals(site))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public void savePasswordsToFile(String path) {
+        try (FileWriter writer = new FileWriter(path)) {
+            gson.toJson(passwords, writer);
+        } catch (IOException e) {
+            System.err.println("Fehler beim Speichern der Passwörter: " + e.getMessage());
+        }
+    }
+
+    public void loadPasswordsFromFile(String path) {
+        passwords = new ArrayList<>();
+        File file = new File(path);
+        if (!file.exists()) {
+            return;
+        }
+
+        try (FileReader reader = new FileReader(path)) {
+            Type listType = new TypeToken<ArrayList<Password>>() {}.getType();
+            List<Password> loadedPasswords = gson.fromJson(reader, listType);
+            if (loadedPasswords != null) {
+                passwords.addAll(loadedPasswords);
+            }
+        } catch (IOException e) {
+            System.err.println("Fehler beim Laden der Passwörter: " + e.getMessage());
+        }
     }
 
     private void saveToFile() {
