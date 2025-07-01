@@ -21,17 +21,15 @@ class PasswordStoreTest {
     // Setup-Methode, die vor jedem Test ausgeführt wird
     @BeforeEach
     void setUp() {
-        passwordStore = new PasswordStore();
-        password1 = new Password("example.com", "user1", "securepassword123");
-        password2 = new Password("testsite.com", "user2", "password456");
-
-        // Erstellen einer temporären Datei für Speichern und Laden von Passwörtern
         try {
             Path tempFile = Files.createTempFile("passwords", ".json");
             tempFilePath = tempFile.toString();
+            passwordStore = new PasswordStore(tempFilePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        password1 = new Password("example.com", "user1", "securepassword123");
+        password2 = new Password("testsite.com", "user2", "password456");
     }
 
     // Test für das Hinzufügen eines Passworts
@@ -80,7 +78,7 @@ class PasswordStoreTest {
         passwordStore.savePasswordsToFile(tempFilePath);
 
         // Neues PasswordStore-Objekt erstellen und Passwörter laden
-        PasswordStore newPasswordStore = new PasswordStore();
+        PasswordStore newPasswordStore = new PasswordStore(tempFilePath);
         newPasswordStore.loadPasswordsFromFile(tempFilePath);
 
         assertEquals(2, newPasswordStore.getAllPasswords().size());

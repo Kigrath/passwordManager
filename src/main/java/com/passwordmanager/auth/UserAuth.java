@@ -12,14 +12,19 @@ import java.util.Base64;
 import java.util.Scanner;
 
 public class UserAuth {
-    private static final String FILE_PATH = "master_user.json";
+    private static String filePath = "master_user.json";
     private static final Gson gson = new Gson();
     private static String encryptionKey;  // Abgeleiteter Schlüssel aus dem Master-Passwort
+
+    // Ermöglicht Tests einen eigenen Speicherort zu setzen
+    public static void setFilePath(String path) {
+        filePath = path;
+    }
 
     public static boolean login() {
         Scanner scanner = new Scanner(System.in);
 
-        if (!Files.exists(Paths.get(FILE_PATH))) {
+        if (!Files.exists(Paths.get(filePath))) {
             System.out.println("🔑 Kein Benutzer gefunden. Registrierung erforderlich.");
             return register();
         }
@@ -34,12 +39,12 @@ public class UserAuth {
     }
 
     public static boolean login(String username, String password) {
-        if (!Files.exists(Paths.get(FILE_PATH))) {
+        if (!Files.exists(Paths.get(filePath))) {
             return false;
         }
 
         try {
-            String json = Files.readString(Paths.get(FILE_PATH));
+            String json = Files.readString(Paths.get(filePath));
             JsonObject credentials = gson.fromJson(json, JsonObject.class);
 
             String savedUsername = credentials.get("username").getAsString();
@@ -80,7 +85,7 @@ public class UserAuth {
         credentials.addProperty("salt", salt);
 
         try {
-            Files.write(Paths.get(FILE_PATH), gson.toJson(credentials).getBytes(StandardCharsets.UTF_8));
+            Files.write(Paths.get(filePath), gson.toJson(credentials).getBytes(StandardCharsets.UTF_8));
             encryptionKey = deriveKeyFromMasterPassword(password, salt);
             return true;
         } catch (Exception e) {

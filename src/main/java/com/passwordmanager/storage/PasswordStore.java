@@ -14,10 +14,15 @@ import java.util.List;
 
 public class PasswordStore {
     private List<Password> passwords;
-    private final String FILE_PATH = "passwords.json"; // Speicherort der Datei
+    private String filePath = "passwords.json"; // Speicherort der Datei
     private final Gson gson = new Gson();
 
     public PasswordStore() {
+        this("passwords.json");
+    }
+
+    public PasswordStore(String filePath) {
+        this.filePath = filePath;
         this.passwords = new ArrayList<>(); // Stelle sicher, dass passwords initialisiert wird
         loadFromFile(); // Gespeicherte Passwörter laden
     }
@@ -73,7 +78,7 @@ public class PasswordStore {
     }
 
     private void saveToFile() {
-        try (FileWriter writer = new FileWriter(FILE_PATH)) {
+        try (FileWriter writer = new FileWriter(filePath)) {
             gson.toJson(passwords, writer);
         } catch (IOException e) {
             System.err.println("Fehler beim Speichern der Passwörter: " + e.getMessage());
@@ -83,12 +88,12 @@ public class PasswordStore {
     private void loadFromFile() {
         passwords = new ArrayList<>(); // Immer eine neue Liste initialisieren
 
-        File file = new File(FILE_PATH);
+        File file = new File(filePath);
         if (!file.exists()) {
             return; // Falls Datei nicht existiert, bleibt die Liste leer
         }
 
-        try (FileReader reader = new FileReader(FILE_PATH)) {
+        try (FileReader reader = new FileReader(filePath)) {
             Type listType = new TypeToken<ArrayList<Password>>() {}.getType();
             List<Password> loadedPasswords = gson.fromJson(reader, listType);
             if (loadedPasswords != null) {

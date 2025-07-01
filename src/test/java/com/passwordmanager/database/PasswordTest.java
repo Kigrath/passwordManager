@@ -1,7 +1,11 @@
 package com.passwordmanager.database;
 
+import com.passwordmanager.auth.UserAuth;
+import com.passwordmanager.encryption.EncryptionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.lang.reflect.Field;
+import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -11,7 +15,11 @@ class PasswordTest {
 
     // Setup-Methode, die vor jedem Test aufgerufen wird
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        String key = Base64.getEncoder().encodeToString(EncryptionUtils.hashSHA256("secret"));
+        Field keyField = UserAuth.class.getDeclaredField("encryptionKey");
+        keyField.setAccessible(true);
+        keyField.set(null, key);
         password = new Password("example.com", "user1", "securepassword123");
     }
 
