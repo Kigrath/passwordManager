@@ -1,6 +1,6 @@
 <h1 align="center" id="title">Password Manager</h1>
 
-<p id="description">A simple local running portable password manager</p>
+<p id="description">A simple local password manager with a modern Swing GUI</p>
 
   
   
@@ -11,6 +11,7 @@ Here're some of the project's best features:
 *   Add Accounts
 *   Delete Accounts
 *   List Accounts
+*   Copy username or password to clipboard
 *   Master Login
 
   

@@ -26,6 +26,22 @@ public class Password {
         return username;
     }
 
+    public void setSite(String site) {
+        this.site = site;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        try {
+            this.encryptedPassword = EncryptionUtils.encrypt(password, UserAuth.getEncryptionKey());
+        } catch (Exception e) {
+            throw new RuntimeException("Fehler bei der Verschlüsselung!", e);
+        }
+    }
+
     public String getPassword() {
         try {
             return EncryptionUtils.decrypt(encryptedPassword, UserAuth.getEncryptionKey());
@@ -39,7 +55,6 @@ public class Password {
         return "Password{" +
                 "site='" + site + '\'' +
                 ", username='" + username + '\'' +
-                ", password='***** (verschlüsselt)'" +
                 '}';
     }
 }
