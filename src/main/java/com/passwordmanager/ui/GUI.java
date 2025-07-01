@@ -7,6 +7,10 @@ import com.passwordmanager.storage.PasswordStore;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Clipboard;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class GUI {
     private JFrame frame;
@@ -36,7 +40,8 @@ public class GUI {
         frame.setSize(400, 250);
         frame.setLocationRelativeTo(null);
 
-        JPanel panel = new JPanel(new GridBagLayout());
+        JPanel panel = new GradientPanel();
+        panel.setLayout(new GridBagLayout());
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5,5,5,5);
@@ -75,7 +80,7 @@ public class GUI {
             }
         });
 
-        frame.add(panel);
+        frame.setContentPane(panel);
         frame.setVisible(true);
     }
 
@@ -89,9 +94,46 @@ public class GUI {
         refreshList();
         JList<Password> list = new JList<>(listModel);
         JScrollPane scrollPane = new JScrollPane(list);
+        GradientPanel content = new GradientPanel();
+        content.setLayout(new BorderLayout());
+        content.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JButton addButton = new JButton("Hinzufügen");
         JButton deleteButton = new JButton("Löschen");
+
+        JPopupMenu popup = new JPopupMenu();
+        JMenuItem copyUser = new JMenuItem("Benutzer kopieren");
+        JMenuItem copyPass = new JMenuItem("Passwort kopieren");
+        popup.add(copyUser);
+        popup.add(copyPass);
+
+        copyUser.addActionListener(e -> {
+            Password sel = list.getSelectedValue();
+            if (sel != null) copyToClipboard(sel.getUsername());
+        });
+
+        copyPass.addActionListener(e -> {
+            Password sel = list.getSelectedValue();
+            if (sel != null) copyToClipboard(sel.getPassword());
+        });
+
+        list.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) showMenu(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) showMenu(e);
+            }
+
+            private void showMenu(MouseEvent e) {
+                int idx = list.locationToIndex(e.getPoint());
+                if (idx >= 0) list.setSelectedIndex(idx);
+                popup.show(e.getComponent(), e.getX(), e.getY());
+            }
+        });
 
         addButton.addActionListener(e -> showAddDialog());
         deleteButton.addActionListener(e -> {
@@ -103,11 +145,14 @@ public class GUI {
         });
 
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setOpaque(false);
         buttonPanel.add(addButton);
         buttonPanel.add(deleteButton);
 
-        frame.add(scrollPane, BorderLayout.CENTER);
-        frame.add(buttonPanel, BorderLayout.SOUTH);
+        content.add(scrollPane, BorderLayout.CENTER);
+        content.add(buttonPanel, BorderLayout.SOUTH);
+
+        frame.setContentPane(content);
         frame.setVisible(true);
     }
 
@@ -138,5 +183,10 @@ public class GUI {
         for (Password p : store.getAllPasswords()) {
             listModel.addElement(p);
         }
+    }
+
+    private void copyToClipboard(String text) {
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(new StringSelection(text), null);
     }
 }
