@@ -1,18 +1,11 @@
 package com.passwordmanager;
 
-import com.passwordmanager.auth.UserAuth;
-import com.passwordmanager.ui.CLI;
-import com.passwordmanager.ui.GUI;
+import com.passwordmanager.ui.LoginGUI;
 
 public class Main {
     public static void main(String[] args) {
-        if (UserAuth.login()) {
-            CLI cli = new CLI();
-            cli.start();
-            // Start graphical user interface
-            new GUI();
-        } else {
-            System.out.println("⛔ Programm wird beendet.");
-        }
+        // Show graphical login window. The main GUI will start after
+        // successful authentication inside LoginGUI.
+        new LoginGUI();
     }
 }
