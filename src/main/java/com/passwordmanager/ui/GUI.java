@@ -1,192 +1,168 @@
 package com.passwordmanager.ui;
 
-import com.passwordmanager.auth.UserAuth;
 import com.passwordmanager.database.Password;
 import com.passwordmanager.storage.PasswordStore;
+import com.passwordmanager.utils.PasswordGenerator;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Clipboard;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class GUI {
+    private final PasswordStore passwordStore;
     private JFrame frame;
-    private PasswordStore store;
-    private DefaultListModel<Password> listModel;
+    private JTable table;
+    private DefaultTableModel tableModel;
 
     public GUI() {
-        store = new PasswordStore();
-        setLookAndFeel();
-        SwingUtilities.invokeLater(this::showLogin);
+        passwordStore = new PasswordStore();
+        SwingUtilities.invokeLater(this::createAndShow);
     }
 
-    private void setLookAndFeel() {
-        try {
-            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (Exception ignored) {}
-    }
-
-    private void showLogin() {
-        frame = new JFrame("Password Manager - Login");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(400, 250);
-        frame.setLocationRelativeTo(null);
-
-        JPanel panel = new GradientPanel();
-        panel.setLayout(new GridBagLayout());
-        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5,5,5,5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        JLabel userLabel = new JLabel("Benutzername:");
-        JTextField userField = new JTextField();
-        JLabel passLabel = new JLabel("Passwort:");
-        JPasswordField passField = new JPasswordField();
-
-        JButton loginButton = new JButton("Login");
-        JButton registerButton = new JButton("Registrieren");
-
-        gbc.gridx = 0; gbc.gridy = 0; panel.add(userLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 0; panel.add(userField, gbc);
-        gbc.gridx = 0; gbc.gridy = 1; panel.add(passLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 1; panel.add(passField, gbc);
-        gbc.gridx = 0; gbc.gridy = 2; panel.add(loginButton, gbc);
-        gbc.gridx = 1; gbc.gridy = 2; panel.add(registerButton, gbc);
-
-        loginButton.addActionListener(e -> {
-            if (UserAuth.login(userField.getText(), new String(passField.getPassword()))) {
-                JOptionPane.showMessageDialog(frame, "Login erfolgreich!");
-                frame.dispose();
-                showMainUI();
-            } else {
-                JOptionPane.showMessageDialog(frame, "Login fehlgeschlagen", "Fehler", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        registerButton.addActionListener(e -> {
-            if (UserAuth.register(userField.getText(), new String(passField.getPassword()))) {
-                JOptionPane.showMessageDialog(frame, "Registrierung erfolgreich!");
-            } else {
-                JOptionPane.showMessageDialog(frame, "Registrierung fehlgeschlagen", "Fehler", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        frame.setContentPane(panel);
-        frame.setVisible(true);
-    }
-
-    private void showMainUI() {
+    private void createAndShow() {
         frame = new JFrame("Password Manager");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 400);
-        frame.setLocationRelativeTo(null);
 
-        listModel = new DefaultListModel<>();
-        refreshList();
-        JList<Password> list = new JList<>(listModel);
-        JScrollPane scrollPane = new JScrollPane(list);
-        GradientPanel content = new GradientPanel();
-        content.setLayout(new BorderLayout());
-        content.setBorder(new EmptyBorder(10, 10, 10, 10));
+        GradientPanel mainPanel = new GradientPanel();
+        mainPanel.setLayout(new BorderLayout());
 
-        JButton addButton = new JButton("Hinzufügen");
-        JButton deleteButton = new JButton("Löschen");
+        tableModel = new DefaultTableModel(new Object[]{"Site", "Username"}, 0);
+        table = new JTable(tableModel);
+        refreshTable();
 
-        JPopupMenu popup = new JPopupMenu();
-        JMenuItem copyUser = new JMenuItem("Benutzer kopieren");
-        JMenuItem copyPass = new JMenuItem("Passwort kopieren");
-        popup.add(copyUser);
-        popup.add(copyPass);
-
-        copyUser.addActionListener(e -> {
-            Password sel = list.getSelectedValue();
-            if (sel != null) copyToClipboard(sel.getUsername());
-        });
-
-        copyPass.addActionListener(e -> {
-            Password sel = list.getSelectedValue();
-            if (sel != null) copyToClipboard(sel.getPassword());
-        });
-
-        list.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (e.isPopupTrigger()) showMenu(e);
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (e.isPopupTrigger()) showMenu(e);
-            }
-
-            private void showMenu(MouseEvent e) {
-                int idx = list.locationToIndex(e.getPoint());
-                if (idx >= 0) list.setSelectedIndex(idx);
-                popup.show(e.getComponent(), e.getX(), e.getY());
-            }
-        });
-
-        addButton.addActionListener(e -> showAddDialog());
-        deleteButton.addActionListener(e -> {
-            Password selected = list.getSelectedValue();
-            if (selected != null) {
-                store.removePassword(selected.getSite());
-                refreshList();
-            }
-        });
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.setOpaque(false);
-        buttonPanel.add(addButton);
-        buttonPanel.add(deleteButton);
+        JButton addBtn = new JButton("Add");
+        JButton delBtn = new JButton("Delete");
+        JButton copyUser = new JButton("Copy Username");
+        JButton copyPass = new JButton("Copy Password");
 
-        content.add(scrollPane, BorderLayout.CENTER);
-        content.add(buttonPanel, BorderLayout.SOUTH);
+        addBtn.addActionListener(e -> showAddDialog());
+        delBtn.addActionListener(e -> deleteSelected());
+        copyUser.addActionListener(e -> copySelectedUsername());
+        copyPass.addActionListener(e -> copySelectedPassword());
 
-        frame.setContentPane(content);
+        buttonPanel.add(addBtn);
+        buttonPanel.add(delBtn);
+        buttonPanel.add(copyUser);
+        buttonPanel.add(copyPass);
+
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        frame.setContentPane(mainPanel);
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+    }
+
+    private void refreshTable() {
+        tableModel.setRowCount(0);
+        for (Password p : passwordStore.getAllPasswords()) {
+            tableModel.addRow(new Object[]{p.getSite(), p.getUsername()});
+        }
     }
 
     private void showAddDialog() {
         JTextField siteField = new JTextField();
         JTextField userField = new JTextField();
-        JTextField passField = new JTextField();
+        JPasswordField passField = new JPasswordField();
 
-        JPanel panel = new JPanel(new GridLayout(0,1));
-        panel.add(new JLabel("Seite:"));
+        JCheckBox upper = new JCheckBox("A-Z", true);
+        JCheckBox lower = new JCheckBox("a-z", true);
+        JCheckBox digits = new JCheckBox("0-9", true);
+        JCheckBox special = new JCheckBox("!@#", true);
+        JSpinner lengthSpinner = new JSpinner(new SpinnerNumberModel(12, 4, 64, 1));
+
+        JButton generateBtn = new JButton("Generate");
+        generateBtn.addActionListener(e -> {
+            String generated = PasswordGenerator.generate(
+                    (int) lengthSpinner.getValue(),
+                    upper.isSelected(),
+                    lower.isSelected(),
+                    digits.isSelected(),
+                    special.isSelected());
+            passField.setText(generated);
+        });
+
+        JPanel panel = new JPanel(new GridLayout(0, 2));
+        panel.add(new JLabel("Site:"));
         panel.add(siteField);
-        panel.add(new JLabel("Benutzername:"));
+        panel.add(new JLabel("Username:"));
         panel.add(userField);
-        panel.add(new JLabel("Passwort:"));
+        panel.add(new JLabel("Password:"));
         panel.add(passField);
+        panel.add(generateBtn);
+        JPanel options = new JPanel();
+        options.add(upper);
+        options.add(lower);
+        options.add(digits);
+        options.add(special);
+        options.add(new JLabel("Len:"));
+        options.add(lengthSpinner);
+        panel.add(new JLabel());
+        panel.add(options);
 
-        int result = JOptionPane.showConfirmDialog(frame, panel, "Passwort hinzufügen", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(frame, panel, "Add Password",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
-            Password p = new Password(siteField.getText(), userField.getText(), passField.getText());
-            store.addPassword(p);
-            refreshList();
+            Password pw = new Password(siteField.getText(), userField.getText(),
+                    new String(passField.getPassword()));
+            passwordStore.addPassword(pw);
+            refreshTable();
         }
     }
 
-    private void refreshList() {
-        if (listModel == null) return;
-        listModel.clear();
-        for (Password p : store.getAllPasswords()) {
-            listModel.addElement(p);
+    private void deleteSelected() {
+        int row = table.getSelectedRow();
+        if (row >= 0) {
+            String site = (String) tableModel.getValueAt(row, 0);
+            passwordStore.removePassword(site);
+            refreshTable();
+        }
+    }
+
+    private void copySelectedUsername() {
+        int row = table.getSelectedRow();
+        if (row >= 0) {
+            String username = (String) tableModel.getValueAt(row, 1);
+            copyToClipboard(username);
+        }
+    }
+
+    private void copySelectedPassword() {
+        int row = table.getSelectedRow();
+        if (row >= 0) {
+            String site = (String) tableModel.getValueAt(row, 0);
+            Password pw = passwordStore.getPasswordForSite(site);
+            if (pw != null) {
+                copyToClipboard(pw.getPassword());
+            }
         }
     }
 
     private void copyToClipboard(String text) {
-        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        clipboard.setContents(new StringSelection(text), null);
+        StringSelection selection = new StringSelection(text);
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
+    }
+
+    private static class GradientPanel extends JPanel {
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+            int w = getWidth();
+            int h = getHeight();
+            Color start = new Color(173, 216, 230); // light blue
+            Color end = new Color(192, 132, 252);   // purple
+            GradientPaint gp = new GradientPaint(0, 0, start, w, h, end);
+            g2d.setPaint(gp);
+            g2d.fillRect(0, 0, w, h);
+        }
     }
 }
