@@ -24,6 +24,20 @@ public class UserAuth {
             return register();
         }
 
+        System.out.print("🔐 Benutzername: ");
+        String username = scanner.nextLine();
+
+        System.out.print("🔐 Passwort: ");
+        String password = scanner.nextLine();
+
+        return login(username, password);
+    }
+
+    public static boolean login(String username, String password) {
+        if (!Files.exists(Paths.get(FILE_PATH))) {
+            return false;
+        }
+
         try {
             String json = Files.readString(Paths.get(FILE_PATH));
             JsonObject credentials = gson.fromJson(json, JsonObject.class);
@@ -32,26 +46,16 @@ public class UserAuth {
             String savedSalt = credentials.get("salt").getAsString();
             String savedHashedPassword = credentials.get("password").getAsString();
 
-            System.out.print("🔐 Benutzername: ");
-            String username = scanner.nextLine();
-
-            System.out.print("🔐 Passwort: ");
-            String password = scanner.nextLine();
-
             String hashedPassword = hashPassword(password, savedSalt);
 
             if (username.equals(savedUsername) && hashedPassword.equals(savedHashedPassword)) {
-                encryptionKey = deriveKeyFromMasterPassword(password, savedSalt); // Schlüssel ableiten
-                System.out.println("✅ Anmeldung erfolgreich!");
+                encryptionKey = deriveKeyFromMasterPassword(password, savedSalt);
                 return true;
-            } else {
-                System.out.println("❌ Falscher Benutzername oder Passwort.");
-                return false;
             }
-        } catch (Exception e) {
-            System.out.println("❌ Fehler beim Laden der Zugangsdaten.");
-            return false;
+        } catch (Exception ignored) {
         }
+
+        return false;
     }
 
     private static boolean register() {
@@ -63,6 +67,10 @@ public class UserAuth {
         System.out.print("🔑 Neues Passwort: ");
         String password = scanner.nextLine();
 
+        return register(username, password);
+    }
+
+    public static boolean register(String username, String password) {
         String salt = generateSalt();
         String hashedPassword = hashPassword(password, salt);
 
@@ -73,11 +81,9 @@ public class UserAuth {
 
         try {
             Files.write(Paths.get(FILE_PATH), gson.toJson(credentials).getBytes(StandardCharsets.UTF_8));
-            encryptionKey = deriveKeyFromMasterPassword(password, salt); // Schlüssel ableiten
-            System.out.println("✅ Registrierung erfolgreich!");
+            encryptionKey = deriveKeyFromMasterPassword(password, salt);
             return true;
         } catch (Exception e) {
-            System.out.println("❌ Fehler beim Speichern der Zugangsdaten.");
             return false;
         }
     }

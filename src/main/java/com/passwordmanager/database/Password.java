@@ -36,10 +36,6 @@ public class Password {
 
     @Override
     public String toString() {
-        return "Password{" +
-                "site='" + site + '\'' +
-                ", username='" + username + '\'' +
-                ", password='***** (verschlüsselt)'" +
-                '}';
+        return site + " (" + username + ")";
     }
 }

@@ -12,6 +12,7 @@ Here're some of the project's best features:
 *   Delete Accounts
 *   List Accounts
 *   Master Login
+*   Modern GUI
 
   
   
