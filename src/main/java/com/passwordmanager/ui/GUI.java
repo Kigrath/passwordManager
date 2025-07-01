@@ -9,6 +9,9 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 
+// Reuse gradient background in a separate component
+import com.passwordmanager.ui.GradientPanel;
+
 public class GUI {
     private final PasswordStore passwordStore;
     private JFrame frame;
@@ -151,18 +154,5 @@ public class GUI {
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
     }
 
-    private static class GradientPanel extends JPanel {
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D) g;
-            int w = getWidth();
-            int h = getHeight();
-            Color start = new Color(173, 216, 230); // light blue
-            Color end = new Color(192, 132, 252);   // purple
-            GradientPaint gp = new GradientPaint(0, 0, start, w, h, end);
-            g2d.setPaint(gp);
-            g2d.fillRect(0, 0, w, h);
-        }
-    }
+    // Gradient is handled by reusable GradientPanel class
 }

@@ -12,8 +12,8 @@ Here're some of the project's best features:
 *   Add Accounts
 *   Delete Accounts
 *   List Accounts
-*   Master Login
-*   Modern GUI
+*   Master Login with graphical login window
+*   Modern GUI with gradient background
 
   
   
